@@ -1,6 +1,29 @@
 (() => {
   'use strict';
 
+  // ---------------------------------------------------------------
+  // Service worker de Monetag (sw.js, sin modificar).
+  // Los formatos de notificaciones push en Android dependen de él.
+  // Registrarlo es idempotente: si la etiqueta ya lo registró, no pasa nada.
+  // ---------------------------------------------------------------
+  function registerPushWorker() {
+    if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+    try {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    } catch (_) { /* ignorado */ }
+  }
+  if (document.readyState === 'complete') {
+    registerPushWorker();
+  } else {
+    window.addEventListener('load', registerPushWorker, { once: true });
+  }
+
+  // Si la página vuelve desde la caché "atrás/adelante" del navegador móvil,
+  // se recarga para que la publicidad y la comprobación empiecen de cero.
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) window.location.reload();
+  });
+
   const overlay = document.getElementById('adblock-overlay');
   const title = document.getElementById('adblock-title');
   const message = document.getElementById('adblock-message');
@@ -10,9 +33,9 @@
   // Si falta alguna pieza del aviso, no se libera la página por seguridad.
   if (!overlay || !title || !message || !status || !reloadButton) return;
 
-  const WAIT_LIMIT_MS = 10000;
+  // En redes móviles la etiqueta puede tardar bastante más que en PC.
+  const WAIT_LIMIT_MS = 20000;
   let timeoutId = null;
-  let checkStarted = false;
   let finished = false;
 
   function keepPageLocked() {
@@ -44,7 +67,6 @@
   }
 
   // Los bloqueadores cosméticos suelen ocultar elementos que imitan anuncios.
-  // Los estilos base son normales (no !important) para que los filtros puedan actuar.
   function detectsCosmeticBlocking() {
     const bait = document.createElement('div');
     bait.className = 'adsbox ad-banner ad-placement adsbygoogle adunit';
@@ -71,7 +93,6 @@
       try {
         cosmeticBlock = detectsCosmeticBlocking();
       } catch (error) {
-        // Un error de la prueba no se considera por sí solo un bloqueador.
         cosmeticBlock = false;
       }
 
@@ -93,15 +114,13 @@
     }
   }
 
-  // Botón único: vuelve a cargar toda la página. La detección comienza otra vez
-  // desde cero; si el bloqueador sigue activo, el mismo aviso volverá a aparecer.
   reloadButton.addEventListener('click', () => {
     reloadButton.disabled = true;
     reloadButton.textContent = 'Recargando página…';
     window.location.reload();
   });
 
-  // Bloqueo de teclado mientras el aviso está activo: no permite saltarlo con Tab/Escape.
+  // Mientras el aviso está activo, Tab/Escape no permiten saltarlo.
   document.addEventListener('keydown', event => {
     if (!document.body.classList.contains('adblock-locked')) return;
     if (event.key === 'Escape' || event.key === 'Tab') {
@@ -115,7 +134,7 @@
     handleAdResource(event.detail && event.detail.state);
   });
 
-  // Cubre el caso en que el evento load/error ocurrió antes de ejecutar este archivo.
+  // Cubre el caso en que load/error ocurrió antes de ejecutar este archivo.
   const initialState = window.__monetagLoadState || 'pending';
   if (initialState === 'loaded' || initialState === 'blocked') {
     handleAdResource(initialState);

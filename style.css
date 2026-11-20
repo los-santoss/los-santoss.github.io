@@ -1,5 +1,4 @@
-#site-content, #site-content *, #adblock-overlay, #adblock-overlay * { box-sizing: border-box; }
-#site-content * { margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
   --bg: #f4f4f4;
@@ -13,11 +12,22 @@
   --font-body: 'Roboto', sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* NOTA: no se usa overflow en html/body. Eso interfiere con los anuncios
+   fijos/superpuestos de Monetag en móviles. El recorte horizontal se hace en <main>. */
 body {
   font-family: var(--font-body);
   background: var(--dark);
   color: var(--dark);
   line-height: 1.5;
+}
+
+main {
+  overflow-x: clip;
 }
 
 /* ============ HEADER LOGO ============ */
@@ -79,7 +89,7 @@ body {
   gap: 2px;
   background: #000;
   max-width: 1200px;
-  margin: 4rem auto;
+  margin: 4rem auto clamp(28px, 5vw, 48px);
   border: 4px solid #fff;
   box-shadow: 0 0 40px rgba(0,0,0,0.8);
   aspect-ratio: 16/9;
@@ -141,6 +151,7 @@ body {
 /* ============ BOTONES ============ */
 .btn {
   display: inline-block;
+  min-height: 48px;
   padding: 1rem 2rem;
   font-family: var(--font-title);
   font-size: 1.2rem;
@@ -151,6 +162,7 @@ body {
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  touch-action: manipulation;
 }
 
 .gta-btn-primary {
@@ -179,7 +191,7 @@ body {
   max-width: 1000px;
   margin: 4rem auto;
   padding: 0 1.5rem;
-  scroll-margin-top: 2rem;
+  scroll-margin-top: 16px;
 }
 
 .gta-section h2 {
@@ -192,13 +204,25 @@ body {
   margin-bottom: 2rem;
 }
 
+.section-header > p {
+  margin: -1.35rem 0 2rem;
+  color: #aaa;
+}
+
+#descargas {
+  margin-top: clamp(38px, 7vw, 76px);
+}
+
 .store-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 2rem;
+  align-items: stretch;
 }
 
 .store-card {
+  min-width: 0;
+  height: 100%;
   background: #1a1a1a;
   border: 1px solid #333;
   transition: transform 0.2s;
@@ -223,6 +247,9 @@ body {
 .bg-data { background: linear-gradient(45deg, #c45824, #6e2e11); }
 
 .store-info {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   padding: 1.5rem;
   color: #fff;
 }
@@ -243,7 +270,8 @@ body {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 1.2rem;
+  column-gap: 14px;
+  row-gap: 8px;
   font-size: 0.8rem;
   color: #999;
   margin-bottom: 1.2rem;
@@ -258,9 +286,13 @@ body {
 
 .store-info .btn {
   width: 100%;
+  margin-top: auto;
   font-size: 1rem;
   padding: 0.8rem;
 }
+
+/* Solo imágenes del contenido propio; no se toca nada de lo que inserte Monetag. */
+main img, main video { max-width: 100%; }
 
 /* ============ PANTALLA DE CARGA (INSTRUCCIONES) ============ */
 .loading-screen {
@@ -310,6 +342,7 @@ body {
   font-size: 1.1rem;
   line-height: 1.4;
   color: #ddd;
+  overflow-wrap: anywhere;
 }
 
 .loading-item strong {
@@ -339,56 +372,25 @@ body {
   text-transform: uppercase;
 }
 
-/* ============ RESPONSIVE ============ */
-@media (max-width: 860px) {
-  .hero-cover {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    aspect-ratio: auto;
-    margin: 2rem 1rem;
-  }
-  .panel-main {
-    grid-row: auto;
-    padding: 2rem 1.5rem;
-  }
-  .panel-1, .panel-2, .panel-3, .panel-4 { display: none; }
-
-  .gta-btn-secondary {
-    margin-left: 0;
-    margin-top: 1rem;
-  }
-  .hero-actions {
-    display: flex;
-    flex-direction: column;
-  }
-}
-
-/* ============ BLOQUEO DE ACCESO POR ADBLOCK ============ */
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  min-width: 320px;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
+/* ============ AVISO DE BLOQUEADOR ============ */
 body.adblock-locked {
-  overflow: hidden !important;
+  overflow: hidden;
 }
 
-body.adblock-locked > :not(#adblock-overlay) {
-  pointer-events: none !important;
-  -webkit-user-select: none !important;
-  user-select: none !important;
+/* Solo se bloquea el contenido propio. Los elementos que Monetag inserta
+   en <body> NO se tocan (antes se les quitaba pointer-events y no funcionaban). */
+body.adblock-locked > header,
+body.adblock-locked > main,
+body.adblock-locked > footer {
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .adblock-overlay {
   position: fixed;
   inset: 0;
-  z-index: 2147483647;
+  z-index: 2147483000;
   display: grid;
   place-items: center;
   width: 100%;
@@ -400,8 +402,6 @@ body.adblock-locked > :not(#adblock-overlay) {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   background: rgba(0, 0, 0, .97);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
 }
 
 body.adblock-ready .adblock-overlay {
@@ -441,6 +441,8 @@ body.adblock-ready .adblock-overlay {
 
 .adblock-dialog h2 {
   margin: 0 0 12px;
+  padding: 0;
+  border: none;
   color: #fff;
   font: 700 clamp(1.45rem, 6vw, 2rem)/1.12 var(--font-title);
   text-transform: uppercase;
@@ -473,35 +475,31 @@ body.adblock-ready .adblock-overlay {
 .adblock-reload:disabled { opacity: .72; cursor: wait; }
 .adblock-status { min-height: 2.8em; color: #aaa !important; font-size: .84rem; }
 
-#site-content img, #site-content video, #site-content iframe { max-width: 100%; }
-button, a { touch-action: manipulation; }
-.btn { min-height: 48px; }
-.section-header > p { margin: -1.35rem 0 2rem; color: #aaa; }
-.store-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); align-items: stretch; }
-.store-card { min-width: 0; height: 100%; }
-.store-info { display: flex; flex-direction: column; align-items: stretch; }
-.store-info .btn { margin-top: auto; }
-.store-meta { column-gap: 14px; row-gap: 8px; }
-.loading-item p { overflow-wrap: anywhere; }
-
+/* ============ RESPONSIVE ============ */
 @media (max-width: 860px) {
   .hero-cover {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto;
     aspect-ratio: auto;
-    margin: 28px 16px;
+    margin: 28px 16px 24px;
   }
-  .panel-main { grid-column: 1; grid-row: 1; padding: clamp(22px, 5vw, 32px); }
+  .panel-main {
+    grid-column: 1;
+    grid-row: 1;
+    padding: clamp(22px, 5vw, 32px);
+  }
   .panel-1, .panel-2, .panel-3, .panel-4 { display: none; }
-  .hero-actions { display: grid; grid-template-columns: 1fr; gap: 10px; }
+
   .gta-btn-secondary { margin: 0; }
+  #instrucciones { margin-top: 22px; }
+  #descargas { margin-top: 34px; }
 }
 
 @media (max-width: 600px) {
   .gta-header { padding: 22px 12px 30px; }
   .gta-logo { font-size: clamp(2.15rem, 12vw, 3.15rem); line-height: 1; }
   .v-logo { width: 48px; height: 48px; font-size: 2.4rem; bottom: -23px; }
-  .hero-cover { margin: 26px 12px; border-width: 2px; box-shadow: 0 0 22px rgba(0,0,0,.65); }
+  .hero-cover { margin: 26px 12px 24px; border-width: 2px; box-shadow: 0 0 22px rgba(0,0,0,.65); }
   .panel-main { padding: 25px 18px 20px; }
   .game-title { font-size: clamp(2rem, 9vw, 2.8rem); line-height: 1.05; }
   .game-subtitle { font-size: .8rem; letter-spacing: 1.4px; margin-bottom: 14px; }
@@ -515,6 +513,7 @@ button, a { touch-action: manipulation; }
   .store-info { padding: 18px; }
   .store-info h3 { font-size: 1.3rem; }
   .store-info p { font-size: .9rem; }
+  .store-info .btn { min-height: 50px; white-space: normal; }
   .loading-screen { margin-top: 42px; padding: 24px 16px; }
   .loading-header { margin-bottom: 22px; }
   .loading-header h2 { font-size: 1.45rem; letter-spacing: 1px; }
@@ -540,66 +539,4 @@ button, a { touch-action: manipulation; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
-}
-
-
-/* ============ ORDEN DE CONTENIDO Y COMPATIBILIDAD MÓVIL ============ */
-#instrucciones,
-#descargas {
-  scroll-margin-top: 16px;
-}
-
-#descargas {
-  margin-top: clamp(38px, 7vw, 76px);
-}
-
-.hero-cover {
-  margin-bottom: clamp(28px, 5vw, 48px);
-}
-
-@media (max-width: 860px) {
-  .hero-cover { margin-bottom: 24px; }
-  #instrucciones { margin-top: 22px; }
-  #descargas { margin-top: 34px; }
-}
-
-/* Mantiene los medios publicitarios insertados por Monetag dentro del viewport. */
-img, video, iframe {
-  max-width: 100%;
-}
-
-@media (max-width: 600px) {
-  #site-content {
-    width: 100%;
-    min-width: 0;
-    overflow-x: clip;
-  }
-  #site-content main, #site-content .gta-section, #site-content .hero-cover,
-  #site-content .store-grid, #site-content .store-card, #site-content .store-info {
-    min-width: 0;
-  }
-  .store-info .btn {
-    min-height: 50px;
-    white-space: normal;
-  }
-}
-
-
-/* La hoja de estilos del sitio queda aislada de los elementos inyectados por Monetag. */
-#site-content {
-  width: 100%;
-  min-width: 0;
-}
-#site-content img,
-#site-content video {
-  max-width: 100%;
-  height: auto;
-}
-
-/* Los anuncios flotantes de terceros quedan fuera del contenedor visual del sitio
-   y conservan su posicionamiento nativo, especialmente en pantallas móviles. */
-@media (max-width: 600px) {
-  #site-content {
-    overflow-x: clip;
-  }
 }
