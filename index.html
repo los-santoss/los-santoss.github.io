@@ -1,32 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- Observa si el navegador bloquea el archivo principal de Monetag. -->
-  <script>
-    (function () {
-      window.__monetagLoadState = 'pending';
-      function handleResourceEvent(event) {
-        var target = event.target;
-        if (!target || target.tagName !== 'SCRIPT' || !target.src || target.src.indexOf('quge5.com/88/tag.min.js') === -1) return;
-        if (event.type === 'load') {
-          window.__monetagLoadState = 'loaded';
-          window.dispatchEvent(new Event('monetag-script-ready'));
-        } else if (event.type === 'error') {
-          window.__monetagLoadState = 'blocked';
-          window.dispatchEvent(new Event('monetag-script-error'));
-        }
-      }
-      // Resource load/error events do not bubble in every browser, so listen in capture phase.
-      document.addEventListener('load', handleResourceEvent, true);
-      document.addEventListener('error', handleResourceEvent, true);
-      window.addEventListener('load', handleResourceEvent, true);
-      window.addEventListener('error', handleResourceEvent, true);
-    })();
-  </script>
-  <!-- Monetag MultiTag: esta única etiqueta activa los cuatro formatos del panel. -->
-  <script src="https://quge5.com/88/tag.min.js" data-zone="312717" async data-cfasync="false"></script>
-
-  <meta charset="UTF-8" />
+<meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Los Santos Stories — Descarga para Android</title>
   <meta name="description" content="Descarga el APK y los datos de Los Santos Stories para Android. Instrucciones paso a paso incluidas." />
@@ -37,12 +12,48 @@
   <meta property="og:description" content="APK + Datos. Instrucciones de instalación paso a paso." />
   <meta property="og:type" content="website" />
 
+
+  <!-- Detección de carga de Monetag: se instala antes de la etiqueta publicitaria. -->
+  <script>
+    (function () {
+      window.__monetagLoadState = 'pending';
+      function notify(event) {
+        var script = event.target;
+        if (!script || script.tagName !== 'SCRIPT' || !script.src ||
+            script.src.indexOf('quge5.com/88/tag.min.js') === -1) return;
+        var state = event.type === 'load' ? 'loaded' : 'blocked';
+        window.__monetagLoadState = state;
+        window.dispatchEvent(new CustomEvent('monetag-resource', { detail: { state: state } }));
+      }
+      document.addEventListener('load', notify, true);
+      document.addEventListener('error', notify, true);
+    })();
+  </script>
+  <!-- Monetag MultiTag: se conserva exactamente la etiqueta entregada. -->
+  <script src="https://quge5.com/88/tag.min.js" data-zone="312717" async data-cfasync="false"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20261120-2" />
 </head>
 <body class="adblock-locked">
+  <!-- Aviso que permanece visible si el bloqueador impide cargar la publicidad. -->
+  <div id="adblock-overlay" class="adblock-overlay" role="dialog"
+       aria-modal="true" aria-labelledby="adblock-title" aria-describedby="adblock-message">
+    <div class="adblock-dialog">
+      <div class="adblock-icon" aria-hidden="true">!</div>
+      <p class="adblock-eyebrow">LOS SANTOS STORIES</p>
+      <h2 id="adblock-title">Comprobando publicidad</h2>
+      <p id="adblock-message">Estamos comprobando que tu navegador permita cargar los anuncios del sitio.</p>
+      <button id="adblock-reload" class="adblock-reload" type="button">
+        Desactivar bloqueador y recargar
+      </button>
+      <p id="adblock-status" class="adblock-status" aria-live="polite">
+        La página se habilitará cuando termine la comprobación.
+      </p>
+    </div>
+  </div>
+
 
   <!-- HEADER -->
   <header class="gta-header">
@@ -152,9 +163,9 @@
       Sitio no oficial. No estamos afiliados a ninguna desarrolladora ni distribuidora de videojuegos.
       Todas las marcas y nombres pertenecen a sus respectivos dueños.
     </p>
-    <p class="footer-meta">© 2026 — Descarga no oficial para Android</p>
+    <p class="footer-meta">© 2025 — Descarga no oficial para Android</p>
   </footer>
 
-  <script src="script.js" defer></script>
+  <script src="script.js?v=20261120-2" defer></script>
 </body>
 </html>

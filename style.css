@@ -362,8 +362,28 @@ body {
   }
 }
 
-/* ============ GATE DE MONETIZACIÓN ============ */
-.adblock-overlay[aria-hidden="true"] { display: none !important; }
+/* ============ BLOQUEO DE ACCESO POR ADBLOCK ============ */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-width: 320px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body.adblock-locked {
+  overflow: hidden !important;
+}
+
+body.adblock-locked > :not(#adblock-overlay) {
+  pointer-events: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
 .adblock-overlay {
   position: fixed;
   inset: 0;
@@ -371,14 +391,22 @@ body {
   display: grid;
   place-items: center;
   width: 100%;
-  min-height: 100%;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: rgba(0, 0, 0, .97);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
+
+body.adblock-ready .adblock-overlay {
+  display: none !important;
+}
+
 .adblock-dialog {
   width: min(100%, 480px);
   margin: auto;
@@ -390,6 +418,7 @@ body {
   border-top: 5px solid var(--gta-green);
   box-shadow: 0 20px 70px rgba(0, 0, 0, .72);
 }
+
 .adblock-icon {
   display: grid;
   place-items: center;
@@ -401,26 +430,30 @@ body {
   color: var(--gta-green);
   font: 700 2.2rem var(--font-title);
 }
+
 .adblock-eyebrow {
   margin-bottom: 8px;
   color: var(--gta-green) !important;
   font: 700 .78rem var(--font-body);
   letter-spacing: .14em;
 }
+
 .adblock-dialog h2 {
   margin: 0 0 12px;
   color: #fff;
   font: 700 clamp(1.45rem, 6vw, 2rem)/1.12 var(--font-title);
   text-transform: uppercase;
 }
+
 .adblock-dialog p {
   color: #ccc;
   line-height: 1.55;
 }
-.adblock-recheck {
+
+.adblock-reload {
   display: block;
   width: 100%;
-  min-height: 50px;
+  min-height: 52px;
   margin: 22px 0 12px;
   padding: 13px 16px;
   border: 0;
@@ -431,32 +464,19 @@ body {
   text-transform: uppercase;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-}
-.adblock-recheck:hover { background: #7cc440; }
-.adblock-recheck:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-.adblock-recheck:disabled { opacity: .72; cursor: wait; }
-.adblock-status { min-height: 2.8em; color: #aaa !important; font-size: .84rem; }
-body.adblock-locked { overflow: hidden !important; }
-body.adblock-locked > :not(#adblock-overlay) {
-  pointer-events: none !important;
-  -webkit-user-select: none !important;
-  user-select: none !important;
+  touch-action: manipulation;
 }
 
-/* ============ AJUSTES GENERALES RESPONSIVOS ============ */
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-body { min-width: 320px; max-width: 100%; overflow-x: hidden; }
+.adblock-reload:hover { background: #7cc440; }
+.adblock-reload:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.adblock-reload:disabled { opacity: .72; cursor: wait; }
+.adblock-status { min-height: 2.8em; color: #aaa !important; font-size: .84rem; }
+
 img, video, iframe { max-width: 100%; }
 button, a { touch-action: manipulation; }
 .btn { min-height: 48px; }
-.section-header > p {
-  margin: -1.35rem 0 2rem;
-  color: #aaa;
-}
-.store-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  align-items: stretch;
-}
+.section-header > p { margin: -1.35rem 0 2rem; color: #aaa; }
+.store-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); align-items: stretch; }
 .store-card { min-width: 0; height: 100%; }
 .store-info { display: flex; flex-direction: column; align-items: stretch; }
 .store-info .btn { margin-top: auto; }
@@ -505,7 +525,7 @@ button, a { touch-action: manipulation; }
   .footer-disclaimer { font-size: .76rem; }
   .footer-meta { font-size: .7rem; }
   .adblock-dialog { padding: 24px 19px; }
-  .adblock-recheck { min-height: 52px; font-size: .95rem; }
+  .adblock-reload { min-height: 54px; font-size: .95rem; }
 }
 
 @media (max-width: 360px) {
@@ -513,6 +533,7 @@ button, a { touch-action: manipulation; }
   .game-title { font-size: 1.85rem; }
   .gta-section h2 { font-size: 1.45rem; }
   .store-info { padding: 15px; }
+  .adblock-dialog { padding: 20px 15px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

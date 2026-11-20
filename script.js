@@ -5,215 +5,136 @@
   const title = document.getElementById('adblock-title');
   const message = document.getElementById('adblock-message');
   const status = document.getElementById('adblock-status');
-  const retryButton = document.getElementById('adblock-recheck');
-  const monetagUrlPart = 'quge5.com/88/tag.min.js';
-  const baitClasses = ['adsbox', 'ad-placement', 'ad-banner', 'adsbygoogle'];
+  const reloadButton = document.getElementById('adblock-reload');
 
-  if (!overlay || !title || !message || !status || !retryButton) return;
+  // Si falta alguna pieza del aviso, no se libera la página por seguridad.
+  if (!overlay || !title || !message || !status || !reloadButton) return;
 
-  let checkTimer = null;
-  let gaveUpWaiting = false;
-  let lastCheckAt = 0;
-  let retryingScript = false;
+  const WAIT_LIMIT_MS = 10000;
+  let timeoutId = null;
+  let checkStarted = false;
+  let finished = false;
 
-  function setPageLocked(locked) {
-    document.body.classList.toggle('adblock-locked', locked);
-    for (const child of document.body.children) {
-      if (child === overlay || child.tagName === 'SCRIPT') continue;
-      child.inert = locked;
-    }
-    overlay.setAttribute('aria-hidden', String(!locked));
-    if (locked) {
-      try { retryButton.focus({ preventScroll: true }); } catch (_) { retryButton.focus(); }
-    }
+  function keepPageLocked() {
+    document.body.classList.add('adblock-locked');
+    document.body.classList.remove('adblock-ready');
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.inert = false;
   }
 
   function showBlocked(reason) {
-    // Asegura que el aviso vuelva a ser visible si el bloqueo aparece después de habilitar la página.
-    overlay.style.display = '';
-    overlay.removeAttribute('aria-hidden');
+    finished = true;
+    window.clearTimeout(timeoutId);
+    keepPageLocked();
     title.textContent = 'Desactivá tu bloqueador de anuncios';
-    message.textContent = reason || 'Detectamos que tu navegador está bloqueando la publicidad. Desactivá el bloqueador para este sitio y volvé a comprobarlo.';
-    status.textContent = 'La página permanecerá bloqueada hasta que la comprobación sea correcta.';
-    retryButton.disabled = false;
-    retryButton.textContent = 'Ya lo desactivé — Volver a comprobar';
-    setPageLocked(true);
-  }
-
-  function showChecking(text) {
-    title.textContent = 'Comprobando publicidad';
-    message.textContent = 'Estamos verificando que el navegador permita cargar los anuncios necesarios para este sitio.';
-    status.textContent = text || 'Un momento, por favor…';
-    retryButton.disabled = true;
-    retryButton.textContent = 'Comprobando…';
-    setPageLocked(true);
+    message.textContent = reason ||
+      'Para usar esta página tenés que desactivar el bloqueador de anuncios para este sitio.';
+    status.textContent = 'No vas a poder utilizar la web hasta desactivar el bloqueador y recargar la página.';
+    reloadButton.disabled = false;
+    reloadButton.textContent = 'Ya desactivé el bloqueador — Recargar página';
   }
 
   function unlockPage() {
+    finished = true;
+    window.clearTimeout(timeoutId);
+    document.body.classList.remove('adblock-locked');
+    document.body.classList.add('adblock-ready');
     overlay.setAttribute('aria-hidden', 'true');
-    overlay.style.display = 'none';
-    setPageLocked(false);
+    overlay.inert = true;
   }
 
-  function lockOverlayVisible() {
-    overlay.style.display = '';
-    overlay.removeAttribute('aria-hidden');
+  // Los bloqueadores cosméticos suelen ocultar elementos que imitan anuncios.
+  // Los estilos base son normales (no !important) para que los filtros puedan actuar.
+  function detectsCosmeticBlocking() {
+    const bait = document.createElement('div');
+    bait.className = 'adsbox ad-banner ad-placement adsbygoogle adunit';
+    bait.setAttribute('aria-hidden', 'true');
+    bait.style.cssText = 'position:absolute;left:-10000px;top:-10000px;width:12px;height:12px;';
+    document.body.appendChild(bait);
+
+    const computed = window.getComputedStyle(bait);
+    const rect = bait.getBoundingClientRect();
+    const blocked = bait.offsetWidth === 0 || bait.offsetHeight === 0 ||
+      rect.width === 0 || rect.height === 0 ||
+      computed.display === 'none' || computed.visibility === 'hidden' ||
+      Number(computed.opacity) === 0;
+
+    bait.remove();
+    return blocked;
   }
 
-  // Prueba local: algunos filtros cosméticos ocultan señuelos habituales de anuncios.
-  function hasBlockedAdBait() {
-    for (const className of baitClasses) {
-      const bait = document.createElement('div');
-      bait.className = className;
-      bait.setAttribute('aria-hidden', 'true');
-      bait.style.cssText = [
-        'position:fixed!important',
-        'left:-10000px!important',
-        'top:0!important',
-        'display:block!important',
-        'visibility:visible!important',
-        'opacity:1!important',
-        'width:12px!important',
-        'height:12px!important',
-        'min-width:12px!important',
-        'min-height:12px!important',
-        'pointer-events:none!important',
-        'z-index:-1!important'
-      ].join(';');
-      document.body.appendChild(bait);
-      const computed = window.getComputedStyle(bait);
-      const rect = bait.getBoundingClientRect();
-      const hidden = bait.offsetWidth === 0 || bait.offsetHeight === 0 ||
-        rect.width === 0 || rect.height === 0 ||
-        computed.display === 'none' || computed.visibility === 'hidden' ||
-        Number(computed.opacity) === 0;
-      bait.remove();
-      if (hidden) return true;
-    }
-    return false;
+  function evaluateLoadedAdScript() {
+    // Pequeño margen para que las reglas cosméticas del navegador se apliquen.
+    window.setTimeout(() => {
+      if (finished) return;
+      let cosmeticBlock = false;
+      try {
+        cosmeticBlock = detectsCosmeticBlocking();
+      } catch (error) {
+        // Un error de la prueba no se considera por sí solo un bloqueador.
+        cosmeticBlock = false;
+      }
+
+      if (cosmeticBlock) {
+        showBlocked('Detectamos un bloqueador de anuncios activo. Desactivalo para este sitio y después recargá la página.');
+      } else {
+        unlockPage();
+      }
+    }, 250);
   }
 
-  function monetagScriptElement() {
-    return Array.from(document.scripts).find(script =>
-      script.src && script.src.includes(monetagUrlPart)
-    );
-  }
-
-  function reloadMonetagScript() {
-    const oldScript = monetagScriptElement();
-    if (!oldScript || retryingScript) return false;
-
-    retryingScript = true;
-    window.__monetagLoadState = 'pending';
-    const replacement = document.createElement('script');
-    // Copia exactamente los atributos del código entregado por Monetag.
-    for (const attribute of oldScript.attributes) {
-      replacement.setAttribute(attribute.name, attribute.value);
-    }
-    replacement.addEventListener('load', () => {
-      window.__monetagLoadState = 'loaded';
-      retryingScript = false;
-      evaluatePage();
-    }, { once: true });
-    replacement.addEventListener('error', () => {
-      window.__monetagLoadState = 'blocked';
-      retryingScript = false;
-      showBlocked('No se pudo cargar el archivo de Monetag. Desactivá el bloqueador para este sitio; si ya lo hiciste, comprobá tu conexión y volvé a intentarlo.');
-    }, { once: true });
-    oldScript.replaceWith(replacement);
-    return true;
-  }
-
-  function evaluatePage() {
-    if (!document.body) return;
-    lastCheckAt = Date.now();
-
-    let baitBlocked = false;
-    try {
-      baitBlocked = hasBlockedAdBait();
-    } catch (_) {
-      // Una excepción en la prueba local no se interpreta automáticamente como bloqueo.
-    }
-
-    const loadState = window.__monetagLoadState || 'pending';
-    if (baitBlocked || loadState === 'blocked') {
-      showBlocked(baitBlocked
-        ? 'Detectamos señales de un bloqueador de anuncios. Desactivalo para este sitio y volvé a comprobarlo.'
-        : 'No se pudo cargar el archivo publicitario de Monetag. Desactivá el bloqueador para este sitio y volvé a comprobarlo.');
+  function handleAdResource(state) {
+    if (state === 'blocked') {
+      showBlocked('El navegador impidió cargar la publicidad. Desactivá el bloqueador de anuncios para este sitio y recargá la página.');
       return;
     }
-
-    if (loadState === 'loaded') {
-      gaveUpWaiting = false;
-      unlockPage();
-      return;
-    }
-
-    // No liberar el contenido mientras el script principal siga sin confirmar su carga.
-    if (gaveUpWaiting) {
-      showBlocked('Todavía no pudimos verificar la carga de Monetag. Desactivá cualquier protección o bloqueador para este sitio y volvé a comprobarlo.');
-    } else {
-      showChecking('Esperando la respuesta del servicio de anuncios…');
+    if (state === 'loaded') {
+      evaluateLoadedAdScript();
     }
   }
 
-  function scheduleEvaluate(delay = 250) {
-    window.clearTimeout(checkTimer);
-    checkTimer = window.setTimeout(evaluatePage, delay);
-  }
-
-  // Estos eventos se capturan desde el <head>, antes de que el script publicitario termine.
-  window.addEventListener('monetag-script-ready', () => scheduleEvaluate(150));
-  window.addEventListener('monetag-script-error', () => {
-    window.__monetagLoadState = 'blocked';
-    showBlocked('El navegador impidió cargar la publicidad. Desactivá el bloqueador para este sitio y volvé a comprobarlo.');
+  // Botón único: vuelve a cargar toda la página. La detección comienza otra vez
+  // desde cero; si el bloqueador sigue activo, el mismo aviso volverá a aparecer.
+  reloadButton.addEventListener('click', () => {
+    reloadButton.disabled = true;
+    reloadButton.textContent = 'Recargando página…';
+    window.location.reload();
   });
 
-  retryButton.addEventListener('click', () => {
-    lockOverlayVisible();
-    showChecking('Volviendo a comprobar…');
-    gaveUpWaiting = false;
-    const state = window.__monetagLoadState || 'pending';
-    if (state === 'blocked' || state === 'timeout') {
-      if (!reloadMonetagScript()) scheduleEvaluate(500);
-    } else {
-      scheduleEvaluate(500);
-    }
-  });
-
-  // El usuario no puede cerrar el aviso con Escape ni tabular hacia el contenido bloqueado.
+  // Bloqueo de teclado mientras el aviso está activo: no permite saltarlo con Tab/Escape.
   document.addEventListener('keydown', event => {
     if (!document.body.classList.contains('adblock-locked')) return;
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' || event.key === 'Tab') {
       event.preventDefault();
       event.stopPropagation();
-    } else if (event.key === 'Tab') {
-      event.preventDefault();
-      retryButton.focus();
+      reloadButton.focus({ preventScroll: true });
     }
   }, true);
 
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && Date.now() - lastCheckAt > 1200) scheduleEvaluate(200);
+  window.addEventListener('monetag-resource', event => {
+    handleAdResource(event.detail && event.detail.state);
   });
-  window.addEventListener('focus', () => {
-    if (Date.now() - lastCheckAt > 1200) scheduleEvaluate(200);
-  });
-  window.addEventListener('online', () => scheduleEvaluate(300));
 
-  // Primera verificación. Si el tag no responde, el sitio permanece bloqueado.
-  lockOverlayVisible();
-  showChecking('Comprobando que la publicidad pueda cargarse…');
-  scheduleEvaluate(300);
-  window.setTimeout(() => {
-    if ((window.__monetagLoadState || 'pending') === 'pending') {
-      gaveUpWaiting = true;
-      window.__monetagLoadState = 'timeout';
-      showBlocked('No pudimos confirmar la carga de la publicidad. Desactivá el bloqueador para este sitio y volvé a comprobarlo.');
-    }
-  }, 9000);
+  // Cubre el caso en que el evento load/error ocurrió antes de ejecutar este archivo.
+  const initialState = window.__monetagLoadState || 'pending';
+  if (initialState === 'loaded' || initialState === 'blocked') {
+    handleAdResource(initialState);
+  } else {
+    keepPageLocked();
+    title.textContent = 'Comprobando publicidad';
+    message.textContent = 'Estamos comprobando que tu navegador permita cargar los anuncios del sitio.';
+    status.textContent = 'La página se habilitará cuando termine la comprobación.';
+    reloadButton.disabled = true;
+    reloadButton.textContent = 'Comprobando…';
 
-  // Desplazamiento suave para enlaces internos, sin romper href vacíos o selectores inválidos.
+    timeoutId = window.setTimeout(() => {
+      if (!finished && (window.__monetagLoadState || 'pending') === 'pending') {
+        showBlocked('No pudimos confirmar la carga de los anuncios. Desactivá el bloqueador de anuncios para este sitio y recargá la página. Si ya lo desactivaste, verificá tu conexión e intentá nuevamente.');
+      }
+    }, WAIT_LIMIT_MS);
+  }
+
+  // Desplazamiento suave para los enlaces internos.
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', event => {
       const href = anchor.getAttribute('href');
