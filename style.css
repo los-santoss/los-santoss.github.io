@@ -540,3 +540,45 @@ button, a { touch-action: manipulation; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+
+/* ============ ORDEN DE CONTENIDO Y COMPATIBILIDAD MÓVIL ============ */
+#instrucciones,
+#descargas {
+  scroll-margin-top: 16px;
+}
+
+#descargas {
+  margin-top: clamp(38px, 7vw, 76px);
+}
+
+.hero-cover {
+  margin-bottom: clamp(28px, 5vw, 48px);
+}
+
+@media (max-width: 860px) {
+  .hero-cover { margin-bottom: 24px; }
+  #instrucciones { margin-top: 22px; }
+  #descargas { margin-top: 34px; }
+}
+
+/* Mantiene los medios publicitarios insertados por Monetag dentro del viewport. */
+img, video, iframe {
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  html, body {
+    width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+  }
+  main, .gta-section, .hero-cover,
+  .store-grid, .store-card, .store-info {
+    min-width: 0;
+  }
+  .store-info .btn {
+    min-height: 50px;
+    white-space: normal;
+  }
+}
