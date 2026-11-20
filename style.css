@@ -19,7 +19,7 @@ body {
   line-height: 1.5;
 }
 
-/* ============ HEADER LOGO GTA ============ */
+/* ============ HEADER LOGO ============ */
 .gta-header {
   background: #000;
   padding: 2rem 1rem;
@@ -137,7 +137,7 @@ body {
   mix-blend-mode: multiply;
 }
 
-/* ============ BOTONES GTA ============ */
+/* ============ BOTONES ============ */
 .btn {
   display: inline-block;
   padding: 1rem 2rem;
@@ -350,7 +350,6 @@ body {
     grid-row: auto;
     padding: 2rem 1.5rem;
   }
-  /* Solo ocultamos paneles decorativos, NO el principal */
   .panel-1, .panel-2, .panel-3, .panel-4 { display: none; }
 
   .gta-btn-secondary {
