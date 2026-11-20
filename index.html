@@ -1,7 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- CÓDIGO DE MONETAG (ONCLICK POPUNDER) -->
+  <!-- Observa si el navegador bloquea el archivo principal de Monetag. -->
+  <script>
+    (function () {
+      window.__monetagLoadState = 'pending';
+      function handleResourceEvent(event) {
+        var target = event.target;
+        if (!target || target.tagName !== 'SCRIPT' || !target.src || target.src.indexOf('quge5.com/88/tag.min.js') === -1) return;
+        if (event.type === 'load') {
+          window.__monetagLoadState = 'loaded';
+          window.dispatchEvent(new Event('monetag-script-ready'));
+        } else if (event.type === 'error') {
+          window.__monetagLoadState = 'blocked';
+          window.dispatchEvent(new Event('monetag-script-error'));
+        }
+      }
+      // Resource load/error events do not bubble in every browser, so listen in capture phase.
+      document.addEventListener('load', handleResourceEvent, true);
+      document.addEventListener('error', handleResourceEvent, true);
+      window.addEventListener('load', handleResourceEvent, true);
+      window.addEventListener('error', handleResourceEvent, true);
+    })();
+  </script>
+  <!-- Monetag MultiTag: esta única etiqueta activa los cuatro formatos del panel. -->
   <script src="https://quge5.com/88/tag.min.js" data-zone="312717" async data-cfasync="false"></script>
 
   <meta charset="UTF-8" />
@@ -20,7 +42,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="adblock-locked">
 
   <!-- HEADER -->
   <header class="gta-header">
@@ -130,9 +152,9 @@
       Sitio no oficial. No estamos afiliados a ninguna desarrolladora ni distribuidora de videojuegos.
       Todas las marcas y nombres pertenecen a sus respectivos dueños.
     </p>
-    <p class="footer-meta">© 2025 — Descarga no oficial para Android</p>
+    <p class="footer-meta">© 2026 — Descarga no oficial para Android</p>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
 </body>
 </html>

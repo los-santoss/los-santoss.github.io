@@ -361,3 +361,161 @@ body {
     flex-direction: column;
   }
 }
+
+/* ============ GATE DE MONETIZACIÓN ============ */
+.adblock-overlay[aria-hidden="true"] { display: none !important; }
+.adblock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  background: rgba(0, 0, 0, .97);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.adblock-dialog {
+  width: min(100%, 480px);
+  margin: auto;
+  padding: clamp(22px, 6vw, 36px);
+  color: #fff;
+  text-align: center;
+  background: #171717;
+  border: 1px solid #414141;
+  border-top: 5px solid var(--gta-green);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, .72);
+}
+.adblock-icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  border: 3px solid var(--gta-green);
+  border-radius: 50%;
+  color: var(--gta-green);
+  font: 700 2.2rem var(--font-title);
+}
+.adblock-eyebrow {
+  margin-bottom: 8px;
+  color: var(--gta-green) !important;
+  font: 700 .78rem var(--font-body);
+  letter-spacing: .14em;
+}
+.adblock-dialog h2 {
+  margin: 0 0 12px;
+  color: #fff;
+  font: 700 clamp(1.45rem, 6vw, 2rem)/1.12 var(--font-title);
+  text-transform: uppercase;
+}
+.adblock-dialog p {
+  color: #ccc;
+  line-height: 1.55;
+}
+.adblock-recheck {
+  display: block;
+  width: 100%;
+  min-height: 50px;
+  margin: 22px 0 12px;
+  padding: 13px 16px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--gta-green);
+  color: #fff;
+  font: 700 1rem var(--font-title);
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.adblock-recheck:hover { background: #7cc440; }
+.adblock-recheck:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.adblock-recheck:disabled { opacity: .72; cursor: wait; }
+.adblock-status { min-height: 2.8em; color: #aaa !important; font-size: .84rem; }
+body.adblock-locked { overflow: hidden !important; }
+body.adblock-locked > :not(#adblock-overlay) {
+  pointer-events: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* ============ AJUSTES GENERALES RESPONSIVOS ============ */
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body { min-width: 320px; max-width: 100%; overflow-x: hidden; }
+img, video, iframe { max-width: 100%; }
+button, a { touch-action: manipulation; }
+.btn { min-height: 48px; }
+.section-header > p {
+  margin: -1.35rem 0 2rem;
+  color: #aaa;
+}
+.store-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  align-items: stretch;
+}
+.store-card { min-width: 0; height: 100%; }
+.store-info { display: flex; flex-direction: column; align-items: stretch; }
+.store-info .btn { margin-top: auto; }
+.store-meta { column-gap: 14px; row-gap: 8px; }
+.loading-item p { overflow-wrap: anywhere; }
+
+@media (max-width: 860px) {
+  .hero-cover {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    aspect-ratio: auto;
+    margin: 28px 16px;
+  }
+  .panel-main { grid-column: 1; grid-row: 1; padding: clamp(22px, 5vw, 32px); }
+  .panel-1, .panel-2, .panel-3, .panel-4 { display: none; }
+  .hero-actions { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .gta-btn-secondary { margin: 0; }
+}
+
+@media (max-width: 600px) {
+  .gta-header { padding: 22px 12px 30px; }
+  .gta-logo { font-size: clamp(2.15rem, 12vw, 3.15rem); line-height: 1; }
+  .v-logo { width: 48px; height: 48px; font-size: 2.4rem; bottom: -23px; }
+  .hero-cover { margin: 26px 12px; border-width: 2px; box-shadow: 0 0 22px rgba(0,0,0,.65); }
+  .panel-main { padding: 25px 18px 20px; }
+  .game-title { font-size: clamp(2rem, 9vw, 2.8rem); line-height: 1.05; }
+  .game-subtitle { font-size: .8rem; letter-spacing: 1.4px; margin-bottom: 14px; }
+  .game-desc { font-size: .95rem; margin-bottom: 20px; }
+  .btn { width: 100%; padding: 13px 16px; font-size: 1.05rem; }
+  .gta-section { margin: 42px auto; padding: 0 14px; }
+  .gta-section h2 { font-size: 1.65rem; margin-bottom: 1.55rem; }
+  .section-header > p { margin-top: -1rem; margin-bottom: 1.5rem; font-size: .9rem; }
+  .store-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .store-image { height: 145px; }
+  .store-info { padding: 18px; }
+  .store-info h3 { font-size: 1.3rem; }
+  .store-info p { font-size: .9rem; }
+  .loading-screen { margin-top: 42px; padding: 24px 16px; }
+  .loading-header { margin-bottom: 22px; }
+  .loading-header h2 { font-size: 1.45rem; letter-spacing: 1px; }
+  .loading-list { gap: 19px; }
+  .loading-item { gap: 11px; }
+  .loading-item .num { flex: 0 0 auto; font-size: 1.35rem; }
+  .loading-item p { font-size: .98rem; }
+  .gta-footer { margin-top: 44px; padding: 28px 16px; }
+  .footer-disclaimer { font-size: .76rem; }
+  .footer-meta { font-size: .7rem; }
+  .adblock-dialog { padding: 24px 19px; }
+  .adblock-recheck { min-height: 52px; font-size: .95rem; }
+}
+
+@media (max-width: 360px) {
+  .gta-logo { font-size: 2rem; }
+  .game-title { font-size: 1.85rem; }
+  .gta-section h2 { font-size: 1.45rem; }
+  .store-info { padding: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
