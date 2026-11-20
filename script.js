@@ -166,3 +166,145 @@
     });
   });
 })();
+
+// ===================================================================
+// Ventana "Mira todo el anuncio" antes de cada descarga.
+// El conteo de 10 s solo avanza mientras esta pestaña está visible:
+// si el anuncio se abre en otra pestaña, hay que volver para seguir.
+// ===================================================================
+(() => {
+  'use strict';
+
+  const GATE_SECONDS = 10;
+
+  const gate = document.getElementById('gate-overlay');
+  const secondsEl = document.getElementById('gate-seconds');
+  const barWrap = gate && gate.querySelector('.gate-bar');
+  const barFill = document.getElementById('gate-bar-fill');
+  const statusEl = document.getElementById('gate-status');
+  const textEl = document.getElementById('gate-text');
+  const continueLink = document.getElementById('gate-continue');
+  const cancelBtn = document.getElementById('gate-cancel');
+  if (!gate || !secondsEl || !barFill || !statusEl || !textEl || !continueLink || !cancelBtn) return;
+
+  let intervalId = null;
+  let targetUrl = '';
+  let elapsedMs = 0;
+  let lastTick = 0;
+  let lastFocus = null;
+
+  function stopTimer() {
+    if (intervalId !== null) {
+      window.clearInterval(intervalId);
+      intervalId = null;
+    }
+  }
+
+  function closeGate() {
+    stopTimer();
+    gate.hidden = true;
+    document.body.classList.remove('gate-open');
+    if (lastFocus && typeof lastFocus.focus === 'function') {
+      lastFocus.focus({ preventScroll: true });
+    }
+  }
+
+  function render() {
+    const left = Math.max(0, GATE_SECONDS - elapsedMs / 1000);
+    const pct = Math.min(100, (elapsedMs / (GATE_SECONDS * 1000)) * 100);
+    secondsEl.textContent = String(Math.ceil(left));
+    barFill.style.width = pct + '%';
+    if (barWrap) barWrap.setAttribute('aria-valuenow', String(Math.round(pct)));
+  }
+
+  function finish() {
+    stopTimer();
+    elapsedMs = GATE_SECONDS * 1000;
+    render();
+    statusEl.textContent = 'Anuncio completado. Abriendo la descarga…';
+
+    // Se intenta abrir solo. Si el navegador móvil lo bloquea (no hay toque reciente),
+    // queda el botón "Continuar" para abrirlo con un toque.
+    let opened = null;
+    try { opened = window.open(targetUrl, '_blank'); } catch (_) { opened = null; }
+
+    if (opened) {
+      try { opened.opener = null; } catch (_) { /* ignorado */ }
+      closeGate();
+    } else {
+      continueLink.href = targetUrl;
+      continueLink.hidden = false;
+      statusEl.textContent = 'Anuncio completado. Toca el botón para continuar.';
+      continueLink.focus({ preventScroll: true });
+    }
+  }
+
+  function tick() {
+    const now = performance.now();
+    const delta = now - lastTick;
+    lastTick = now;
+
+    const visible = document.visibilityState === 'visible';
+    if (visible) elapsedMs += delta;
+
+    statusEl.textContent = visible
+      ? 'Viendo anuncio… no cierres esta ventana.'
+      : 'Vuelve a esta pestaña para que continúe el conteo.';
+
+    render();
+    if (elapsedMs >= GATE_SECONDS * 1000) finish();
+  }
+
+  function openGate(url, label) {
+    targetUrl = url;
+    elapsedMs = 0;
+    lastFocus = document.activeElement;
+    continueLink.hidden = true;
+    textEl.textContent = 'Tu descarga de ' + label + ' comenzará cuando termine el anuncio.';
+    statusEl.textContent = 'Esperando el anuncio…';
+    render();
+
+    gate.hidden = false;
+    document.body.classList.add('gate-open');
+    cancelBtn.focus({ preventScroll: true });
+
+    stopTimer();
+    lastTick = performance.now();
+    intervalId = window.setInterval(tick, 250);
+  }
+
+  // Los dos botones de descarga (APK y datos).
+  document.querySelectorAll('a[data-gate]').forEach(link => {
+    link.addEventListener('click', event => {
+      // Solo se cancela la navegación directa; el clic sigue llegando a Monetag.
+      event.preventDefault();
+      if (document.body.classList.contains('adblock-locked')) return;
+      openGate(link.href, link.getAttribute('data-gate') || 'el archivo');
+    });
+  });
+
+  continueLink.addEventListener('click', () => {
+    window.setTimeout(closeGate, 300);
+  });
+  cancelBtn.addEventListener('click', closeGate);
+
+  document.addEventListener('keydown', event => {
+    if (gate.hidden) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeGate();
+    } else if (event.key === 'Tab') {
+      // Mantiene el foco dentro de la ventana.
+      const items = [continueLink, cancelBtn].filter(el => !el.hidden);
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
+})();

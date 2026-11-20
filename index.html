@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261120-4" />
+  <link rel="stylesheet" href="style.css?v=20261120-5" />
 </head>
 <body class="adblock-locked">
   <!-- Aviso que permanece visible si el bloqueador impide cargar la publicidad. -->
@@ -126,7 +126,7 @@
               <li><span>Servidor</span> MediaFire</li>
             </ul>
             <a href="https://www.mediafire.com/file/gcmzk3ocjn0e952/GTA5_launcher.apk/file"
-               target="_blank" rel="noopener noreferrer" class="btn gta-btn-primary">
+               data-gate="el APK" target="_blank" rel="noopener noreferrer" class="btn gta-btn-primary">
               Descargar APK ↗
             </a>
           </div>
@@ -143,7 +143,7 @@
               <li><span>Servidor</span> BuzzHeavier</li>
             </ul>
             <a href="https://buzzheavier.com/pwhdssa2nerd"
-               target="_blank" rel="noopener noreferrer" class="btn gta-btn-primary">
+               data-gate="los datos" target="_blank" rel="noopener noreferrer" class="btn gta-btn-primary">
               Descargar Datos ↗
             </a>
           </div>
@@ -160,6 +160,24 @@
     <p class="footer-meta">© 2025 — Descarga no oficial para Android</p>
   </footer>
 
-  <script src="script.js?v=20261120-4" defer></script>
+  <!-- VENTANA DE ANUNCIO ANTES DE LA DESCARGA -->
+  <div id="gate-overlay" class="gate-overlay" role="dialog" aria-modal="true"
+       aria-labelledby="gate-title" aria-describedby="gate-text" hidden>
+    <div class="gate-dialog">
+      <p class="gate-eyebrow">LOS SANTOS STORIES</p>
+      <h2 id="gate-title">Mira todo el anuncio para continuar</h2>
+      <p id="gate-text" class="gate-text">Tu descarga comenzará cuando termine el anuncio.</p>
+      <div class="gate-count" aria-hidden="true"><span id="gate-seconds">10</span><small>seg</small></div>
+      <div class="gate-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="gate-bar-fill" class="gate-bar-fill"></div>
+      </div>
+      <p id="gate-status" class="gate-status" aria-live="polite">Esperando el anuncio…</p>
+      <a id="gate-continue" class="btn gta-btn-primary gate-continue" href="#"
+         target="_blank" rel="noopener noreferrer" hidden>Continuar a la descarga ↗</a>
+      <button id="gate-cancel" class="gate-cancel" type="button">Cancelar</button>
+    </div>
+  </div>
+
+  <script src="script.js?v=20261120-5" defer></script>
 </body>
 </html>

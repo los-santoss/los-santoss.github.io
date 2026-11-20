@@ -540,3 +540,103 @@ body.adblock-ready .adblock-overlay {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+/* ============ VENTANA DE ANUNCIO ANTES DE LA DESCARGA ============ */
+/* z-index menor que el de Monetag (2147483647) para que sus anuncios se vean por encima. */
+[hidden] { display: none !important; }
+
+body.gate-open { overflow: hidden; }
+
+.gate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482000;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(0, 0, 0, .88);
+}
+
+.gate-dialog {
+  width: min(100%, 460px);
+  margin: auto;
+  padding: clamp(22px, 6vw, 34px);
+  color: #fff;
+  text-align: center;
+  background: #171717;
+  border: 1px solid #414141;
+  border-top: 5px solid var(--gta-green);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, .72);
+}
+
+.gate-eyebrow {
+  margin-bottom: 8px;
+  color: var(--gta-green);
+  font: 700 .78rem var(--font-body);
+  letter-spacing: .14em;
+}
+
+.gate-dialog h2 {
+  margin: 0 0 10px;
+  padding: 0;
+  border: none;
+  color: #fff;
+  font: 700 clamp(1.4rem, 6vw, 1.9rem)/1.15 var(--font-title);
+  text-transform: uppercase;
+}
+
+.gate-text { color: #ccc; line-height: 1.5; }
+
+.gate-count {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  margin: 18px 0 12px;
+  font-family: var(--font-title);
+  color: var(--gta-green);
+}
+.gate-count span { font-size: 3.4rem; font-weight: 700; line-height: 1; }
+.gate-count small { font-size: 1rem; text-transform: uppercase; color: #aaa; }
+
+.gate-bar {
+  height: 8px;
+  overflow: hidden;
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+.gate-bar-fill {
+  width: 0;
+  height: 100%;
+  background: var(--gta-green);
+  transition: width .25s linear;
+}
+
+.gate-status {
+  min-height: 2.6em;
+  margin: 12px 0 6px;
+  color: #aaa;
+  font-size: .86rem;
+}
+
+.gate-continue { display: block; width: 100%; margin: 6px 0 10px; }
+
+.gate-cancel {
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 1px solid #555;
+  border-radius: 2px;
+  background: transparent;
+  color: #bbb;
+  font: 700 .9rem var(--font-title);
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.gate-cancel:hover { color: #fff; border-color: #888; }
+.gate-cancel:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
