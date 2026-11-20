@@ -1,4 +1,5 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
+#site-content, #site-content *, #adblock-overlay, #adblock-overlay * { box-sizing: border-box; }
+#site-content * { margin: 0; padding: 0; }
 
 :root {
   --bg: #f4f4f4;
@@ -472,7 +473,7 @@ body.adblock-ready .adblock-overlay {
 .adblock-reload:disabled { opacity: .72; cursor: wait; }
 .adblock-status { min-height: 2.8em; color: #aaa !important; font-size: .84rem; }
 
-img, video, iframe { max-width: 100%; }
+#site-content img, #site-content video, #site-content iframe { max-width: 100%; }
 button, a { touch-action: manipulation; }
 .btn { min-height: 48px; }
 .section-header > p { margin: -1.35rem 0 2rem; color: #aaa; }
@@ -568,17 +569,37 @@ img, video, iframe {
 }
 
 @media (max-width: 600px) {
-  html, body {
+  #site-content {
     width: 100%;
     min-width: 0;
     overflow-x: clip;
   }
-  main, .gta-section, .hero-cover,
-  .store-grid, .store-card, .store-info {
+  #site-content main, #site-content .gta-section, #site-content .hero-cover,
+  #site-content .store-grid, #site-content .store-card, #site-content .store-info {
     min-width: 0;
   }
   .store-info .btn {
     min-height: 50px;
     white-space: normal;
+  }
+}
+
+
+/* La hoja de estilos del sitio queda aislada de los elementos inyectados por Monetag. */
+#site-content {
+  width: 100%;
+  min-width: 0;
+}
+#site-content img,
+#site-content video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Los anuncios flotantes de terceros quedan fuera del contenedor visual del sitio
+   y conservan su posicionamiento nativo, especialmente en pantallas móviles. */
+@media (max-width: 600px) {
+  #site-content {
+    overflow-x: clip;
   }
 }
